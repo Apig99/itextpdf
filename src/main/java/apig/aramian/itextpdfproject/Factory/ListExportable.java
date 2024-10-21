@@ -14,6 +14,7 @@ public class ListExportable implements Exportable {
     public ListExportable(List<Object> list) {
         this.list = list;
     }
+
     @Override
     public void export(Document document) throws DocumentException {
         if (!list.isEmpty() && list.getFirst() instanceof Map) {
@@ -78,6 +79,7 @@ public class ListExportable implements Exportable {
         }
 
         for (Map<String, Object> row : nestedTableData) {
+            
             for (String column : firstRow.keySet()) {
                 Object cellValue = row.get(column);
                 if (cellValue instanceof List) {

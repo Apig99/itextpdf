@@ -8,7 +8,7 @@ import com.itextpdf.text.Paragraph;
 import java.util.Map;
 
 public class MapExportable implements Exportable {
-    private Map<String, Object> map;
+    private final Map<String, Object> map;
 
     public MapExportable(Map<String, Object> map) {
         this.map = map;
@@ -18,11 +18,11 @@ public class MapExportable implements Exportable {
     public void export(Document document) throws DocumentException {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             Exportable exportable = ExportableFactory.createExportable(entry.getValue());
-            document.add(new Paragraph(entry.getKey() + ":"));
             exportable.export(document);
             document.add(Chunk.NEWLINE);
         }
     }
+
 
 }
 

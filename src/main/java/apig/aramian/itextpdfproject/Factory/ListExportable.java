@@ -9,15 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 public class ListExportable implements Exportable {
-    private List<Object> list;
+    private final List<Object> list;
 
     public ListExportable(List<Object> list) {
         this.list = list;
     }
-
     @Override
     public void export(Document document) throws DocumentException {
-        if (!list.isEmpty() && list.get(0) instanceof Map) {
+        if (!list.isEmpty() && list.getFirst() instanceof Map) {
             createTableFromListOfMaps(list, document);
         } else {
             for (Object item : list) {
@@ -30,7 +29,7 @@ public class ListExportable implements Exportable {
     private void createTableFromListOfMaps(List<?> tableData, Document document) throws DocumentException {
         if (tableData.isEmpty()) return;
 
-        Map<String, Object> firstRow = (Map<String, Object>) tableData.get(0);
+        Map<String, Object> firstRow = (Map<String, Object>) tableData.getFirst();
         PdfPTable table = new PdfPTable(firstRow.size());
         table.setWidthPercentage(100);
         table.setSpacingBefore(10f);
@@ -49,7 +48,6 @@ public class ListExportable implements Exportable {
             Map<String, Object> row = (Map<String, Object>) rowObj;
             for (String column : firstRow.keySet()) {
                 Object cellValue = row.get(column);
-                Exportable exportable = ExportableFactory.createExportable(cellValue);
                 PdfPCell cell = new PdfPCell();
                 if (cellValue instanceof List) {
                     PdfPTable nestedTable = createNestedTable((List<Map<String, Object>>) cellValue);
@@ -67,8 +65,8 @@ public class ListExportable implements Exportable {
         if (nestedTableData.isEmpty()) return null;
 
         Map<String, Object> firstRow = nestedTableData.get(0);
-        PdfPTable nestedTable = new PdfPTable(firstRow.size());
-        nestedTable.setWidthPercentage(100);
+        PdfPTable table = new PdfPTable(firstRow.size());
+        table.setWidthPercentage(100);
 
         for (String column : firstRow.keySet()) {
             PdfPCell header = new PdfPCell();
@@ -76,15 +74,20 @@ public class ListExportable implements Exportable {
             header.setPhrase(new Phrase(column, headFont));
             header.setHorizontalAlignment(Element.ALIGN_CENTER);
             header.setBackgroundColor(BaseColor.LIGHT_GRAY);
-            nestedTable.addCell(header);
+            table.addCell(header);
         }
 
         for (Map<String, Object> row : nestedTableData) {
             for (String column : firstRow.keySet()) {
                 Object cellValue = row.get(column);
-                nestedTable.addCell(cellValue != null ? cellValue.toString() : "");
+                if (cellValue instanceof List) {
+                    PdfPTable nestedTable = createNestedTable((List<Map<String, Object>>) cellValue);
+                    PdfPCell nestedCell = new PdfPCell(nestedTable);
+                    table.addCell(nestedCell);
+                } else
+                    table.addCell(cellValue != null ? cellValue.toString() : "");
             }
         }
-        return nestedTable;
+        return table;
     }
 }
